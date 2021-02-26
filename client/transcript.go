@@ -14,9 +14,8 @@ type Client struct {
 }
 
 // NewClient ...
-func NewClient(videoID string) Client {
+func NewClient() Client {
 	return Client{
-		videoID: videoID,
 		client:  &http.Client{},
 	}
 }
@@ -27,15 +26,15 @@ func (t Client) Save(id, language, filename string) error {
 }
 
 // List ...
-func (t Client) List(ids []string) ([]string, error) {
-	return transcript.ListTranscripts(ids, t.client)
+func (t Client) List(id string) ([]string, error) {
+	return transcript.ListTranscripts(id, t.client)
 }
 
 // Fetch ...
 func (t Client) Fetch(id, language string) ([]string, error) {
 	tr := transcript.FetchTranscript(id, language, t.client)
 	if len(tr.Text) < 0 {
-		return "", errors.New("Captions Not Avalible")
+		return []string{}, errors.New("Captions Not Avalible")
 	}
 	return tr.Text, nil
 }
