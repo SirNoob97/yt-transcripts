@@ -20,7 +20,7 @@ type CaptionTrack struct {
 	IsTranslatable bool   `json:"isTranslatable"`
 }
 
-// Caption ...
-type Caption struct {
+// CaptionList ...
+type CaptionList struct {
 	PCTR PlayerCaptionsTracklistRenderer `json:"playerCaptionsTracklistRenderer"`
 }
