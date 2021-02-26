@@ -5,7 +5,6 @@ import (
 	"encoding/json"
 	"encoding/xml"
 	"fmt"
-	"io"
 	"io/ioutil"
 	"log"
 	"net/http"
@@ -16,13 +15,12 @@ import (
 // ListTranscripts ...
 func ListTranscripts(videoID string, client *http.Client) ([]string, error) {
 	captions := getCaptions(videoID, client)
-
-	tracks := make([]string, len(captions))
+	tracks := make([]string, 0, len(captions))
 
 	if len(captions) > 0 {
 		tracks = append(tracks, fmt.Sprintf("Available Transcripts of %s", videoID))
 		for i, track := range captions {
-			tracks = append(tracks, fmt.Sprintf("Transcript #%d - %s(%s)\n", i+1, track.Name.SimpleText, track.LanguageCode))
+			tracks = append(tracks, fmt.Sprintf("Transcript #%d - %s(%s)", i+1, track.Name.SimpleText, track.LanguageCode))
 		}
 	}
 
@@ -33,9 +31,16 @@ func ListTranscripts(videoID string, client *http.Client) ([]string, error) {
 func FetchTranscript(videoID, language string, client *http.Client) Transcript {
 	captions := getCaptions(videoID, client)
 
+	if language == "" {
+		language = captions[0].LanguageCode
+	}
+
 	for _, track := range captions {
 		if language == track.LanguageCode {
-			body := getRequest(track.BaseURL, client)
+			body, err := getRequest(track.BaseURL, client)
+			if err != nil {
+				log.Fatal(err)
+			}
 			return buildTranscript(body)
 		}
 	}
@@ -48,10 +53,9 @@ type Transcript struct {
 	Text    []string `xml:"text"`
 }
 
-func buildTranscript(body io.ReadCloser) Transcript {
-	defer body.Close()
+func buildTranscript(body []byte) Transcript {
 	var t Transcript
-	err := xml.NewDecoder(body).Decode(&t)
+	err := xml.Unmarshal(body, &t)
 	if err != nil {
 		log.Fatal(err)
 	}
@@ -60,17 +64,16 @@ func buildTranscript(body io.ReadCloser) Transcript {
 }
 
 func getCaptions(videoID string, client *http.Client) []CaptionTrack {
-	body := getRequest(buildURL(videoID), client)
-	data, err := ioutil.ReadAll(body)
+	body, err := getRequest(buildURL(videoID), client)
 	if err != nil {
 		log.Fatal(err)
 	}
 
-	first := bytes.Split(data, []byte("\"captions\":"))
-	second := bytes.Split(first[1], []byte(",\"videoDetails"))
+	data := bytes.Split(body, []byte("\"captions\":"))
+	captions := bytes.Split(data[1], []byte(",\"videoDetails"))
 
 	var c *CaptionList
-	err = json.Unmarshal(second[0], &c)
+	err = json.Unmarshal(captions[0], &c)
 	if err != nil {
 		log.Fatal(err)
 	}
@@ -78,7 +81,7 @@ func getCaptions(videoID string, client *http.Client) []CaptionTrack {
 	return c.PCTR.CaptionTracks
 }
 
-func getRequest(url string, client *http.Client) io.ReadCloser {
+func getRequest(url string, client *http.Client) ([]byte, error) {
 	req, err := http.NewRequest("GET", url, strings.NewReader(""))
 	if err != nil {
 		log.Fatal(err)
@@ -90,7 +93,7 @@ func getRequest(url string, client *http.Client) io.ReadCloser {
 	}
 	defer res.Body.Close()
 
-	return res.Body
+	return ioutil.ReadAll(res.Body)
 }
 
 func buildURL(videoID string) string {
