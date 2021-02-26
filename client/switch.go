@@ -5,24 +5,12 @@ import (
 	"flag"
 	"fmt"
 	"os"
-	"strings"
 )
-
-type idsFlag []string
-
-func (list idsFlag) String() string {
-	return strings.Join(list, ",")
-}
-
-func (list *idsFlag) Set(v string) error {
-	*list = append(*list, v)
-	return nil
-}
 
 // TranscriptClient ...
 type TranscriptClient interface {
 	Save(id, language, fileName string) error
-	List(ids []string) ([]string, error)
+	List(id string) ([]string, error)
 	Fetch(id, language string) ([]string, error)
 }
 
@@ -33,8 +21,8 @@ type Switch struct {
 }
 
 // NewSwitch ...
-func NewSwitch(videoID string) Switch {
-	tClient := NewClient(videoID)
+func NewSwitch() Switch {
+	tClient := NewClient()
 	s := Switch{
 		client:   tClient,
 	}
@@ -127,10 +115,10 @@ func (s Switch) save() func(string) error {
 
 func (s Switch) list() func(string) error {
 	return func(cmd string) error {
-		ids := idsFlag{}
+		ids := ""
 
 		editCmd := flag.NewFlagSet(cmd, flag.ExitOnError)
-		editCmd.Var(&ids, "id", "The IDs (int) of the videos")
+		editCmd.StringVar(&ids, "id", "", "Video ID")
 
 		if err := s.checkArgs(1); err != nil {
 			return err
