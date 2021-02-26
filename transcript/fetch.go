@@ -43,7 +43,7 @@ func build(body []byte) {
 		log.Fatal(err)
 	}
 
-	extractCaptions(c.PlayerCaptionsTracklistRenderer.CaptionTracks[1])
+	extractCaptions(c.PCTR.CaptionTracks[1])
 }
 
 // Transcript ...
