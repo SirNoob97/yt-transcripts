@@ -22,8 +22,8 @@ func (list *idsFlag) Set(v string) error {
 // TranscriptClient ...
 type TranscriptClient interface {
 	Save(id, language, fileName string) error
-	List(ids []string) ([]byte, error)
-	Fetch(id, language string) ([]byte, error)
+	List(ids []string) ([]string, error)
+	Fetch(id, language string) ([]string, error)
 }
 
 // Switch ...
@@ -94,8 +94,8 @@ func (s Switch) saveFlags(f *flag.FlagSet) (*string, *string, *string) {
 
 	f.StringVar(&i, "id", "", "Video ID")
 	f.StringVar(&i, "i", "", "Video ID")
-	f.StringVar(&l, "language", "", "Language in which you want to store the transcript")
-	f.StringVar(&l, "l", "", "Language in which you want to store the transcript")
+	f.StringVar(&l, "language", "", "Language code in which you want to store the transcript")
+	f.StringVar(&l, "l", "", "Language code in which you want to store the transcript")
 	f.StringVar(&o, "output", "", "Filename in which the data will be stored")
 	f.StringVar(&o, "o", "", "Filename in which the data will be stored")
 
@@ -145,7 +145,9 @@ func (s Switch) list() func(string) error {
 			return errors.New("Could not find transcripts")
 		}
 
-		fmt.Println(string(res))
+		for _, r := range res {
+			fmt.Println(r)
+		}
 		return nil
 	}
 }
@@ -155,8 +157,8 @@ func (s Switch) fetchFlags(f *flag.FlagSet) (*string, *string) {
 
 	f.StringVar(&i, "id", "", "Video ID")
 	f.StringVar(&i, "i", "", "Video ID")
-	f.StringVar(&l, "language", "", "Language in which you want to search for the transcript")
-	f.StringVar(&l, "l", "", "Language in which you want to search for the transcript")
+	f.StringVar(&l, "language", "", "Language code in which you want to search for the transcript")
+	f.StringVar(&l, "l", "", "Language code in which you want to search for the transcript")
 
 	return &i, &l
 }
@@ -179,7 +181,9 @@ func (s Switch) fetch() func(string) error {
 			return errors.New("Could not fetch transcript")
 		}
 
-		fmt.Println( string(res))
+		for _, r := range res {
+			fmt.Println(r)
+		}
 		return nil
 	}
 }
