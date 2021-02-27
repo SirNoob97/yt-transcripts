@@ -5,13 +5,19 @@ import (
 	"fmt"
 	"os"
 
-	"github.com/SirNoob97/yt-transcripts/cli"
+	cli "github.com/SirNoob97/yt-transcripts/cli"
+)
+
+// LDFLAGS
+var (
+	Version string
+	AppName string
 )
 
 func main() {
 	helpFlag := flag.Bool("help", false, "Display help message")
 	flag.Parse()
-	s := client.NewSwitch()
+	s := cli.NewSwitch(Version, AppName)
 
 	if *helpFlag || len(os.Args) == 1 {
 		s.Help()
