@@ -16,21 +16,24 @@ type TranscriptClient interface {
 
 // Switch ...
 type Switch struct {
-	client   TranscriptClient
-	comands  map[string]func() func(string) error
+	client  TranscriptClient
+	comands map[string]func() func(string) error
+	version string
+	appname string
 }
 
 // NewSwitch ...
-func NewSwitch() Switch {
+func NewSwitch(version, appname string) Switch {
 	tClient := NewClient()
 	s := Switch{
-		client:   tClient,
+		client: tClient,
 	}
 
 	s.comands = map[string]func() func(string) error{
-		"save":  s.save,
-		"list":  s.list,
-		"fetch": s.fetch,
+		"save":    s.save,
+		"list":    s.list,
+		"fetch":   s.fetch,
+		"version": s.info,
 	}
 	return s
 }
@@ -49,7 +52,7 @@ func (s Switch) Switch() error {
 func (s Switch) parseCmd(cmd *flag.FlagSet) error {
 	err := cmd.Parse(os.Args[2:])
 	if err != nil {
-		return errors.New("Could not parse '"+cmd.Name()+"' command flags")
+		return errors.New("Could not parse '" + cmd.Name() + "' command flags")
 	}
 	return nil
 }
@@ -164,7 +167,7 @@ func (s Switch) fetch() func(string) error {
 		i, l := s.fetchFlags(fetchCmd)
 		fetchCmd.Usage = fetchHelp
 
-		if err := s.checkArgs(1); err != nil {
+		if err := s.checkArgs(2); err != nil {
 			return err
 		}
 
@@ -178,6 +181,17 @@ func (s Switch) fetch() func(string) error {
 		}
 
 		fmt.Println(res)
+		return nil
+	}
+}
+
+func (s Switch) info() func(string) error {
+	return func(cmd string) error {
+		if err := s.checkArgs(0); err != nil {
+			return err
+		}
+
+		fmt.Printf("%s %s", s.appname, s.version)
 		return nil
 	}
 }
