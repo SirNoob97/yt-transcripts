@@ -31,10 +31,6 @@ func ListTranscripts(videoID string, client *http.Client) ([]string, error) {
 func FetchTranscript(videoID, language string, client *http.Client) Transcript {
 	captions := getCaptions(videoID, client)
 
-	if language == "" {
-		language = captions[0].LanguageCode
-	}
-
 	for _, track := range captions {
 		if language == track.LanguageCode {
 			body, err := getRequest(track.BaseURL, client)
