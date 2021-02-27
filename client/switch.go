@@ -69,23 +69,27 @@ func (s Switch) checkArgs(minArgs int) error {
 
 // Help ...
 func (s Switch) Help() {
-	var help string
-	for name := range s.comands {
-		help += name + "\t --help\n"
-	}
+	help := `
+Commands:
+  save    Save the transcript to the specified file path.
+  list    List available video transcripts.
+  fetch   Fetch the transcript.
 
-	fmt.Printf("Usage off: %s:\n <command> [<arguments>]\n%s", os.Args[0], help)
+Options:
+  --help, -h   Display command help message.
+`
+	fmt.Printf("Usage off: %s: [COMMAND] [OPTIONS]\n%s", os.Args[0], help)
 }
 
 func (s Switch) saveFlags(f *flag.FlagSet) (*string, *string, *string) {
 	i, l, o := "", "", ""
 
-	f.StringVar(&i, "id", "", "Video ID")
-	f.StringVar(&i, "i", "", "Video ID")
-	f.StringVar(&l, "language", "", "Language code in which you want to store the transcript")
-	f.StringVar(&l, "l", "", "Language code in which you want to store the transcript")
-	f.StringVar(&o, "output", "", "Filename in which the data will be stored")
-	f.StringVar(&o, "o", "", "Filename in which the data will be stored")
+	f.StringVar(&i, "id", "", "")
+	f.StringVar(&i, "i", "", "")
+	f.StringVar(&l, "language", "", "")
+	f.StringVar(&l, "l", "", "")
+	f.StringVar(&o, "output", "", "")
+	f.StringVar(&o, "o", "", "")
 
 	return &i, &l, &o
 }
@@ -94,6 +98,7 @@ func (s Switch) save() func(string) error {
 	return func(cmd string) error {
 		createCmd := flag.NewFlagSet(cmd, flag.ExitOnError)
 		i, l, o := s.saveFlags(createCmd)
+		createCmd.Usage = saveHelp
 
 		if err := s.checkArgs(3); err != nil {
 			return err
@@ -115,10 +120,12 @@ func (s Switch) save() func(string) error {
 
 func (s Switch) list() func(string) error {
 	return func(cmd string) error {
-		ids := ""
+		id := ""
 
 		editCmd := flag.NewFlagSet(cmd, flag.ExitOnError)
-		editCmd.StringVar(&ids, "id", "", "Video ID")
+		editCmd.StringVar(&id, "i", "", "")
+		editCmd.StringVar(&id, "id", "", "")
+		editCmd.Usage = listHelp
 
 		if err := s.checkArgs(1); err != nil {
 			return err
@@ -128,7 +135,7 @@ func (s Switch) list() func(string) error {
 			return err
 		}
 
-		res, err := s.client.List(ids)
+		res, err := s.client.List(id)
 		if err != nil {
 			return errors.New("Could not find transcripts")
 		}
@@ -143,10 +150,10 @@ func (s Switch) list() func(string) error {
 func (s Switch) fetchFlags(f *flag.FlagSet) (*string, *string) {
 	i, l := "", ""
 
-	f.StringVar(&i, "id", "", "Video ID")
-	f.StringVar(&i, "i", "", "Video ID")
-	f.StringVar(&l, "language", "", "Language code in which you want to search for the transcript")
-	f.StringVar(&l, "l", "", "Language code in which you want to search for the transcript")
+	f.StringVar(&i, "id", "", "")
+	f.StringVar(&i, "i", "", "")
+	f.StringVar(&l, "language", "", "")
+	f.StringVar(&l, "l", "", "")
 
 	return &i, &l
 }
@@ -155,6 +162,7 @@ func (s Switch) fetch() func(string) error {
 	return func(cmd string) error {
 		fetchCmd := flag.NewFlagSet(cmd, flag.ExitOnError)
 		i, l := s.fetchFlags(fetchCmd)
+		fetchCmd.Usage = fetchHelp
 
 		if err := s.checkArgs(1); err != nil {
 			return err
