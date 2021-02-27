@@ -5,7 +5,7 @@ import (
 	"fmt"
 	"os"
 
-	"github.com/SirNoob97/yt-transcripts/client"
+	"github.com/SirNoob97/yt-transcripts/cli"
 )
 
 func main() {
