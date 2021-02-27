@@ -11,7 +11,7 @@ import (
 type TranscriptClient interface {
 	Save(id, language, fileName string) error
 	List(id string) ([]string, error)
-	Fetch(id, language string) ([]string, error)
+	Fetch(id, language string) (string, error)
 }
 
 // Switch ...
@@ -108,7 +108,7 @@ func (s Switch) save() func(string) error {
 			return errors.New("Could not save transcript")
 		}
 
-		fmt.Printf("Transcript save successfully")
+		fmt.Println("Transcript save successfully")
 		return nil
 	}
 }
@@ -169,9 +169,7 @@ func (s Switch) fetch() func(string) error {
 			return errors.New("Could not fetch transcript")
 		}
 
-		for _, r := range res {
-			fmt.Println(r)
-		}
+		fmt.Println(res)
 		return nil
 	}
 }
