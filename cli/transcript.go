@@ -60,7 +60,7 @@ func (t Client) Fetch(id, language string) (string, error) {
 		return "", errors.New("Captions Not Avalible")
 	}
 
-	return html.UnescapeString(strings.Join(tr.Text, "")), nil
+	return html.UnescapeString(strings.Join(tr.Text, "\n")), nil
 }
 
 func getSystemLanguage() string {
