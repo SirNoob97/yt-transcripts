@@ -4,7 +4,7 @@ TARGET := $(shell echo ${PWD}/bin/$(APPNAME))
 
 VERSION := $(shell git describe --tags --abbrev=0)
 BUILD := $(shell git rev-list -1 $(VERSION))
-LDFLAGS := -ldflags "-X=main.Version=$(VERSION) -X=main.AppName=$(APPNAME)"
+LDFLAGS := -ldflags "-X=main.Version=$(VERSION) -X=main.Appname=$(APPNAME)"
 
 
 .PHONY: install build run clean uninstall
