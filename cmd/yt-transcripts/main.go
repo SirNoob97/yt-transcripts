@@ -5,7 +5,7 @@ import (
 	"fmt"
 	"os"
 
-	cli "github.com/SirNoob97/yt-transcripts/cli"
+	"github.com/SirNoob97/yt-transcripts/cli"
 )
 
 // LDFLAGS
