@@ -11,16 +11,21 @@ import (
 // LDFLAGS
 var (
 	Version string
-	AppName string
+	Appname string
 )
 
 func main() {
-	helpFlag := flag.Bool("help", false, "Display help message")
-	flag.Parse()
-	s := cli.NewSwitch(Version, AppName)
+	v, h := flags()
 
-	if *helpFlag || len(os.Args) == 1 {
+	s := cli.NewSwitch(Appname, Version)
+
+	if *h || len(os.Args) == 1 {
 		s.Help()
+		return
+	}
+
+	if *v {
+		s.Info()
 		return
 	}
 
@@ -29,4 +34,15 @@ func main() {
 		fmt.Printf("cmd switch error %v\n", err)
 		os.Exit(2)
 	}
+}
+
+func flags() (*bool, *bool) {
+	versionFlag, helpFlag := false, false
+	flag.BoolVar(&helpFlag, "help", false, "")
+	flag.BoolVar(&helpFlag, "h", false, "")
+	flag.BoolVar(&versionFlag, "version", false, "")
+	flag.BoolVar(&versionFlag, "v", false, "")
+	flag.Parse()
+
+	return &versionFlag, &helpFlag
 }
