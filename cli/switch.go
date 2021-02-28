@@ -23,17 +23,18 @@ type Switch struct {
 }
 
 // NewSwitch ...
-func NewSwitch(version, appname string) Switch {
+func NewSwitch(appname, version string) Switch {
 	tClient := NewClient()
 	s := Switch{
-		client: tClient,
+		client:  tClient,
+		appname: appname,
+		version: version,
 	}
 
 	s.comands = map[string]func() func(string) error{
-		"save":    s.save,
-		"list":    s.list,
-		"fetch":   s.fetch,
-		"version": s.info,
+		"save":  s.save,
+		"list":  s.list,
+		"fetch": s.fetch,
 	}
 	return s
 }
@@ -57,14 +58,17 @@ func (s Switch) parseCmd(cmd *flag.FlagSet) error {
 	return nil
 }
 
-func (s Switch) checkArgs(minArgs int) error {
+func (s Switch) checkCommandArgs(minArgs int) error {
 	if (len(os.Args) == 3 && os.Args[2] == "--help") || (len(os.Args) == 3 && os.Args[2] == "-h") {
 		return nil
 	}
 
 	if len(os.Args)-2 < minArgs {
-		fmt.Printf("Incorrect use of %s\n%s %s --help\n", os.Args[1], os.Args[0], os.Args[1])
-		return fmt.Errorf("%s expects at least %d arg(s), %d provided", os.Args[1], minArgs, len(os.Args)-2)
+		errorMsg := `
+Incorrect use of %s\n%s %s --help
+%s expects at least %d arg(s), %d provided
+		`
+		return fmt.Errorf(errorMsg ,os.Args[1], os.Args[0], os.Args[1], os.Args[1], minArgs, len(os.Args)-2)
 	}
 
 	return nil
@@ -79,9 +83,15 @@ Commands:
   fetch   Fetch the transcript.
 
 Options:
-  --help, -h   Display command help message.
+  --help, -h      Display command help message.
+  --version, -v   Show app version.
 `
-	fmt.Printf("Usage off: %s: [COMMAND] [OPTIONS]\n%s", os.Args[0], help)
+	fmt.Fprintf(os.Stderr, "Usage off: %s: [COMMAND] [OPTIONS]\n%s", os.Args[0], help)
+}
+
+// Info ...
+func (s Switch) Info() {
+	fmt.Printf("%s %s\n", s.appname, s.version)
 }
 
 func (s Switch) saveFlags(f *flag.FlagSet) (*string, *string, *string) {
@@ -103,7 +113,7 @@ func (s Switch) save() func(string) error {
 		i, l, o := s.saveFlags(createCmd)
 		createCmd.Usage = saveHelp
 
-		if err := s.checkArgs(3); err != nil {
+		if err := s.checkCommandArgs(3); err != nil {
 			return err
 		}
 
@@ -130,7 +140,7 @@ func (s Switch) list() func(string) error {
 		editCmd.StringVar(&id, "id", "", "")
 		editCmd.Usage = listHelp
 
-		if err := s.checkArgs(1); err != nil {
+		if err := s.checkCommandArgs(1); err != nil {
 			return err
 		}
 
@@ -167,7 +177,7 @@ func (s Switch) fetch() func(string) error {
 		i, l := s.fetchFlags(fetchCmd)
 		fetchCmd.Usage = fetchHelp
 
-		if err := s.checkArgs(2); err != nil {
+		if err := s.checkCommandArgs(2); err != nil {
 			return err
 		}
 
@@ -181,17 +191,6 @@ func (s Switch) fetch() func(string) error {
 		}
 
 		fmt.Println(res)
-		return nil
-	}
-}
-
-func (s Switch) info() func(string) error {
-	return func(cmd string) error {
-		if err := s.checkArgs(0); err != nil {
-			return err
-		}
-
-		fmt.Printf("%s %s", s.appname, s.version)
 		return nil
 	}
 }
