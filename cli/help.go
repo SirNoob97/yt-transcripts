@@ -35,4 +35,3 @@ Options:
 func printMsg(help string) {
 	fmt.Fprintf(os.Stderr, "Usage of: %s %s [OPTIONS]\n%s", os.Args[0], os.Args[1], help)
 }
-
