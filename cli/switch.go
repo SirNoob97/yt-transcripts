@@ -23,10 +23,9 @@ type Switch struct {
 }
 
 // NewSwitch ...
-func NewSwitch(appname, version string) Switch {
-	tClient := NewClient()
+func NewSwitch(appname, version string, client TranscriptClient) Switch {
 	s := Switch{
-		client:  tClient,
+		client:  client,
 		appname: appname,
 		version: version,
 	}
@@ -68,7 +67,7 @@ func (s Switch) checkCommandArgs(minArgs int) error {
 Incorrect use of %s\n%s %s --help
 %s expects at least %d arg(s), %d provided
 		`
-		return fmt.Errorf(errorMsg ,os.Args[1], os.Args[0], os.Args[1], os.Args[1], minArgs, len(os.Args)-2)
+		return fmt.Errorf(errorMsg, os.Args[1], os.Args[0], os.Args[1], os.Args[1], minArgs, len(os.Args)-2)
 	}
 
 	return nil
