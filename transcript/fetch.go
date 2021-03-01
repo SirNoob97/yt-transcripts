@@ -5,18 +5,40 @@ import (
 	"encoding/json"
 	"encoding/xml"
 	"fmt"
-	"io/ioutil"
 	"log"
-	"net/http"
 	"os"
 	"strings"
+
+	"github.com/SirNoob97/yt-transcripts/client"
 )
 
-// ListTranscripts ...
-func ListTranscripts(videoID string, client *http.Client) ([]string, error) {
-	captions := getCaptions(videoID, client)
-	tracks := make([]string, 0, len(captions))
+// Fetcher ...
+type Fetcher interface {
+	Fetch(videoID, language string) Transcript
+	List(videoID string) ([]string, error)
+}
 
+// Transcript ...
+type Transcript struct {
+	XMLName xml.Name `xml:"transcript"`
+	Text    []string `xml:"text"`
+	client  client.Requester
+}
+
+// NewTrasncript ...
+func NewTrasncript(client client.Requester) Transcript {
+	return Transcript{client: client}
+}
+
+// List ...
+func (t Transcript) List(videoID string) ([]string, error) {
+	body, err := t.client.DoGetRequest(buildURL(videoID))
+	if err != nil {
+		log.Fatal(err)
+	}
+
+	captions := getCaptions(body)
+	tracks := make([]string, 0, len(captions))
 	if len(captions) > 0 {
 		tracks = append(tracks, fmt.Sprintf("Available Transcripts of %s", videoID))
 		for i, track := range captions {
@@ -27,30 +49,27 @@ func ListTranscripts(videoID string, client *http.Client) ([]string, error) {
 	return tracks, nil
 }
 
-// FetchTranscript ...
-func FetchTranscript(videoID, language string, client *http.Client) Transcript {
-	captions := getCaptions(videoID, client)
+// Fetch ...
+func (t Transcript) Fetch(videoID, language string) Transcript {
+	body, err := t.client.DoGetRequest(buildURL(videoID))
+	if err != nil {
+		log.Fatal(err)
+	}
 
+	captions := getCaptions(body)
 	for _, track := range captions {
 		if language == track.LanguageCode {
-			body, err := getRequest(track.BaseURL, client)
+			body, err := t.client.DoGetRequest(track.BaseURL)
 			if err != nil {
 				log.Fatal(err)
 			}
-			return buildTranscript(body)
+			return t.buildTranscript(body)
 		}
 	}
 	return Transcript{}
 }
 
-// Transcript ...
-type Transcript struct {
-	XMLName xml.Name `xml:"transcript"`
-	Text    []string `xml:"text"`
-}
-
-func buildTranscript(body []byte) Transcript {
-	var t Transcript
+func (t Transcript) buildTranscript(body []byte) Transcript {
 	err := xml.Unmarshal(body, &t)
 	if err != nil {
 		log.Fatal(err)
@@ -59,37 +78,17 @@ func buildTranscript(body []byte) Transcript {
 	return t
 }
 
-func getCaptions(videoID string, client *http.Client) []CaptionTrack {
-	body, err := getRequest(buildURL(videoID), client)
-	if err != nil {
-		log.Fatal(err)
-	}
-
+func getCaptions(body []byte) []CaptionTrack {
 	data := bytes.Split(body, []byte("\"captions\":"))
 	captions := bytes.Split(data[1], []byte(",\"videoDetails"))
 
 	var c *CaptionList
-	err = json.Unmarshal(captions[0], &c)
+	err := json.Unmarshal(captions[0], &c)
 	if err != nil {
 		log.Fatal(err)
 	}
 
 	return c.PCTR.CaptionTracks
-}
-
-func getRequest(url string, client *http.Client) ([]byte, error) {
-	req, err := http.NewRequest("GET", url, strings.NewReader(""))
-	if err != nil {
-		log.Fatal(err)
-	}
-
-	res, err := client.Do(req)
-	if err != nil {
-		log.Fatal(err)
-	}
-	defer res.Body.Close()
-
-	return ioutil.ReadAll(res.Body)
 }
 
 func buildURL(videoID string) string {
