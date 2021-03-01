@@ -4,31 +4,27 @@ import (
 	"errors"
 	"html"
 	"log"
-	"net/http"
 	"os"
 	"strings"
 
 	"github.com/SirNoob97/yt-transcripts/transcript"
 )
 
-// Client ...
-type Client struct {
-	client  *http.Client
-	videoID string
+// FetcherClient ...
+type FetcherClient struct {
+	fetcher transcript.Fetcher
 }
 
-// NewClient ...
-func NewClient() Client {
-	return Client{
-		client: &http.Client{},
-	}
+// NewFetcherClient ...
+func NewFetcherClient(fetcher transcript.Fetcher) FetcherClient {
+	return FetcherClient{fetcher: fetcher}
 }
 
 // Save ...
-func (t Client) Save(id, language, filename string) error {
+func (t FetcherClient) Save(id, language, filename string) error {
 	tr, err := t.Fetch(id, language)
 	if err != nil {
-		log.Fatal(err)
+		return err
 	}
 
 	file, err := os.OpenFile(filename, os.O_RDWR|os.O_CREATE, 0600)
@@ -45,18 +41,18 @@ func (t Client) Save(id, language, filename string) error {
 }
 
 // List ...
-func (t Client) List(id string) ([]string, error) {
-	return transcript.ListTranscripts(id, t.client)
+func (t FetcherClient) List(id string) ([]string, error) {
+	return t.fetcher.List(id)
 }
 
 // Fetch ...
-func (t Client) Fetch(id, language string) (string, error) {
+func (t FetcherClient) Fetch(id, language string) (string, error) {
 	if language == "" {
 		language = getSystemLanguage()
 	}
 
-	tr := transcript.FetchTranscript(id, language, t.client)
-	if len(tr.Text) < 0 {
+	tr := t.fetcher.Fetch(id, language)
+	if len(tr.Text) == 0 {
 		return "", errors.New("Captions Not Avalible")
 	}
 
