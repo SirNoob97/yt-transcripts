@@ -16,8 +16,8 @@ var (
 
 func main() {
 	v, h := flags()
-
-	s := cli.NewSwitch(Appname, Version)
+	c := cli.NewClient()
+	s := cli.NewSwitch(Appname, Version, c)
 
 	if *h || len(os.Args) == 1 {
 		s.Help()
