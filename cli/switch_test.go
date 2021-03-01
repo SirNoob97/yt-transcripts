@@ -1,20 +1,20 @@
 package cli
 
 import (
+	"errors"
 	"flag"
 	"io/ioutil"
 	"os"
 	"testing"
 	"unicode/utf8"
 
-	"github.com/SirNoob97/yt-transcripts/transcript"
-	"github.com/pasdam/mockit/matchers/argument"
-	"github.com/pasdam/mockit/mockit"
+	mocks "github.com/SirNoob97/yt-transcripts/mocks/cli"
 )
 
-func Test_NewSwitch(t *testing.T) {
+func TestNewSwitch(t *testing.T) {
 	const appname, version = "TESTING", "0.0.0"
-	s := NewSwitch(appname, version)
+	m := new(mocks.TranscriptClient)
+	s := NewSwitch(appname, version, m)
 
 	if len(s.comands) == 0 {
 		t.Fatalf("Expected a non-empty commands map")
@@ -25,14 +25,15 @@ func Test_NewSwitch(t *testing.T) {
 	}
 }
 
-func Test_Switch_WithAValidCommand(t *testing.T) {
+func TestSwitch_WithAValidCommand(t *testing.T) {
 	save := func() func(string) error {
 		return func(save string) error {
 			return nil
 		}
 	}
 	const appname, version = "TESTING", "0.0.0"
-	s := NewSwitch(appname, version)
+	m := new(mocks.TranscriptClient)
+	s := NewSwitch(appname, version, m)
 	s.comands["save"] = save
 	os.Args[1] = "save"
 
@@ -42,9 +43,10 @@ func Test_Switch_WithAValidCommand(t *testing.T) {
 	}
 }
 
-func Test_Switch_WithAnInvalidCommand(t *testing.T) {
+func TestSwitch_WithAnInvalidCommand(t *testing.T) {
 	const appname, version = "TESTING", "0.0.0"
-	s := NewSwitch(appname, version)
+	m := new(mocks.TranscriptClient)
+	s := NewSwitch(appname, version, m)
 	os.Args[1] = appname
 
 	err := s.Switch()
@@ -53,7 +55,7 @@ func Test_Switch_WithAnInvalidCommand(t *testing.T) {
 	}
 }
 
-func Test_parseCmd(t *testing.T) {
+func TestParseCmd(t *testing.T) {
 	const appname, command, testFlag, arg = "TESTING", "COMMAND", "-i", "TEST"
 	os.Args = []string{appname, command, testFlag, arg}
 	cmd := flag.NewFlagSet(command, flag.ExitOnError)
@@ -66,7 +68,7 @@ func Test_parseCmd(t *testing.T) {
 	}
 }
 
-func Test_parseCmd_WithInvalidFlag(t *testing.T) {
+func TestParseCmd_WithInvalidFlag(t *testing.T) {
 	const appname, command, testFlag, arg = "TESTING", "COMMAND", "-e", "-1"
 	os.Args = []string{appname, command, testFlag, arg}
 	cmd := flag.NewFlagSet(command, flag.ContinueOnError)
@@ -79,7 +81,7 @@ func Test_parseCmd_WithInvalidFlag(t *testing.T) {
 	}
 }
 
-func Test_checkCommandArgs(t *testing.T) {
+func TestCheckCommandArgs(t *testing.T) {
 	const appname, command, testFlag, arg = "TESTING", "COMMAND", "-e", "-1"
 	os.Args = []string{appname, command, testFlag, arg}
 	s := Switch{}
@@ -89,7 +91,7 @@ func Test_checkCommandArgs(t *testing.T) {
 	}
 }
 
-func Test_checkCommandArgs_WithHFlag(t *testing.T) {
+func TestCheckCommandArgs_WithHFlag(t *testing.T) {
 	const appname, command, testFlag = "TESTING", "COMMAND", "-h"
 	os.Args = []string{appname, command, testFlag}
 	s := Switch{}
@@ -99,7 +101,7 @@ func Test_checkCommandArgs_WithHFlag(t *testing.T) {
 	}
 }
 
-func Test_checkCommandArgs_WithHelpFlag(t *testing.T) {
+func TestCheckCommandArgs_WithHelpFlag(t *testing.T) {
 	const appname, command, testFlag = "TESTING", "COMMAND", "--help"
 	os.Args = []string{appname, command, testFlag}
 	s := Switch{}
@@ -109,7 +111,7 @@ func Test_checkCommandArgs_WithHelpFlag(t *testing.T) {
 	}
 }
 
-func Test_checkCommandArgs_With0Args(t *testing.T) {
+func TestCheckCommandArgs_With0Args(t *testing.T) {
 	const appname, command, testFlag = "TESTING", "COMMAND", "-flag"
 	os.Args = []string{appname, command, testFlag}
 	s := Switch{}
@@ -119,7 +121,7 @@ func Test_checkCommandArgs_With0Args(t *testing.T) {
 	}
 }
 
-func Test_Help(t *testing.T) {
+func TestHelp(t *testing.T) {
 	stderr := os.Stderr
 	r, w, err := os.Pipe()
 	if err != nil {
@@ -143,7 +145,7 @@ func Test_Help(t *testing.T) {
 	}
 }
 
-func Test_Info(t *testing.T) {
+func TestInfo(t *testing.T) {
 	stdout := os.Stdout
 	r, w, err := os.Pipe()
 	if err != nil {
@@ -168,7 +170,7 @@ func Test_Info(t *testing.T) {
 	}
 }
 
-func Test_saveFlags(t *testing.T) {
+func TestSaveFlags(t *testing.T) {
 	const appname, command = "TESTING", "COMMAND"
 	cmd := flag.NewFlagSet(command, flag.ExitOnError)
 	s := Switch{}
@@ -186,7 +188,7 @@ func Test_saveFlags(t *testing.T) {
 	}
 }
 
-func Test_fetchFlags(t *testing.T) {
+func TestFetchFlags(t *testing.T) {
 	const appname, command = "TESTING", "COMMAND"
 	cmd := flag.NewFlagSet(command, flag.ExitOnError)
 	s := Switch{}
@@ -201,26 +203,109 @@ func Test_fetchFlags(t *testing.T) {
 	}
 }
 
-func Test_save(t *testing.T) {
+func TestSave(t *testing.T) {
 	const appname, version = "TESTING", "0.0.0"
 	const command, flagI, flagL, flagO, arg = "save", "-i", "-l", "-o", "ARG"
 	os.Args = []string{appname, command, flagI, arg, flagL, arg, flagO, arg}
 
-	s := NewSwitch(appname, version)
-	f := mockit.MockFunc(t, s.client.Fetch)
-	f.With(arg, arg).Return(appname, nil)
+	m := new(mocks.TranscriptClient)
 
-	tr := mockit.MockFunc(t, transcript.FetchTranscript)
-	tr.With(argument.Any, argument.Any, argument.Any).Return(transcript.Transcript{})
+	s := NewSwitch(appname, version, m)
 
-	fi := mockit.MockFunc(t, os.OpenFile)
-	fi.With(argument.Any, argument.Any, argument.Any)
+	m.On("Save", arg, arg, arg).Return(nil)
 
-	sa := mockit.MockFunc(t, s.client.Save)
-	sa.With(argument.Any, argument.Any, argument.Any).Return(nil)
-
-	err := s.Switch()
+	err := s.save()(command)
 	if err != nil {
-		t.Fatalf("Expected nil error got, %v\n", err)
+		t.Fatalf("Expected nil error, got %v", err)
+	}
+}
+
+func TestSave_FailCase(t *testing.T) {
+	const appname, version = "TESTING", "0.0.0"
+	const command, flagI, flagL, flagO, arg = "save", "-i", "-l", "-o", "ARG"
+	const errorMsg = "ERROR"
+	os.Args = []string{appname, command, flagI, arg, flagL, arg, flagO, arg}
+
+	m := new(mocks.TranscriptClient)
+
+	s := NewSwitch(appname, version, m)
+
+	m.On("Save", arg, arg, arg).Return(errors.New(errorMsg))
+
+	err := s.save()(command)
+	if err == nil {
+		t.Fatalf("Expected %s as error message, got nil", errorMsg)
+	}
+}
+
+func TestFetch(t *testing.T) {
+	const appname, version = "TESTING", "0.0.0"
+	const command, flagI, flagL, arg = "fetch", "-i", "-l", "ARG"
+	const success = "SUCCESS"
+	os.Args = []string{appname, command, flagI, arg, flagL, arg}
+
+	m := new(mocks.TranscriptClient)
+
+	s := NewSwitch(appname, version, m)
+
+	m.On("Fetch", arg, arg).Return(success, nil)
+
+	err := s.fetch()(command)
+	if err != nil {
+		t.Fatalf("Expected nil error, got %v", err)
+	}
+}
+
+func TestFetch_FailCase(t *testing.T) {
+	const appname, version = "TESTING", "0.0.0"
+	const command, flagI, flagL, arg = "fetch", "-i", "-l", "ARG"
+	const empty, errorMsg = "", "ERROR"
+	os.Args = []string{appname, command, flagI, arg, flagL, arg}
+
+	m := new(mocks.TranscriptClient)
+
+	s := NewSwitch(appname, version, m)
+
+	m.On("Fetch", arg, arg).Return(empty, errors.New(errorMsg))
+
+	err := s.fetch()(command)
+	if err == nil {
+		t.Fatalf("Expected %s as error message, got nil", errorMsg)
+	}
+}
+
+func TestList(t *testing.T) {
+	const appname, version = "TESTING", "0.0.0"
+	const command, flagI, arg = "list", "-i", "ARG"
+	var success = []string{"SUCCESS"}
+	os.Args = []string{appname, command, flagI, arg}
+
+	m := new(mocks.TranscriptClient)
+
+	s := NewSwitch(appname, version, m)
+
+	m.On("List", arg).Return(success, nil)
+
+	err := s.list()(command)
+	if err != nil {
+		t.Fatalf("Expected nil error, got %v", err)
+	}
+}
+
+func TestList_FailCase(t *testing.T) {
+	const appname, version = "TESTING", "0.0.0"
+	const command, flagI, arg = "list", "-i", "ARG"
+	var errorMsg = errors.New("ERROR")
+	os.Args = []string{appname, command, flagI, arg}
+
+	m := new(mocks.TranscriptClient)
+
+	s := NewSwitch(appname, version, m)
+
+	m.On("List", arg).Return([]string{}, errorMsg)
+
+	err := s.list()(command)
+	if err == nil {
+		t.Fatalf("Expected %s as error message, got nil", errorMsg)
 	}
 }
