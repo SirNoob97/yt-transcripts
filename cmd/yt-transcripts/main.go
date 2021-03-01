@@ -6,6 +6,8 @@ import (
 	"os"
 
 	"github.com/SirNoob97/yt-transcripts/cli"
+	"github.com/SirNoob97/yt-transcripts/client"
+	"github.com/SirNoob97/yt-transcripts/transcript"
 )
 
 // LDFLAGS
@@ -16,7 +18,10 @@ var (
 
 func main() {
 	v, h := flags()
-	c := cli.NewClient()
+
+	hc := client.NewHTTPClient()
+	t := transcript.NewTrasncript(hc)
+	c := cli.NewFetcherClient(t)
 	s := cli.NewSwitch(Appname, Version, c)
 
 	if *h || len(os.Args) == 1 {
