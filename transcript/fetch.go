@@ -6,7 +6,6 @@ import (
 	"encoding/xml"
 	"fmt"
 	"log"
-	"os"
 	"strings"
 
 	"github.com/SirNoob97/yt-transcripts/client"
@@ -34,7 +33,7 @@ func NewTrasncript(client client.Requester) Transcript {
 func (t Transcript) List(videoID string) ([]string, error) {
 	body, err := t.client.DoGetRequest(buildURL(videoID))
 	if err != nil {
-		log.Fatal(err)
+		return []string{}, err
 	}
 
 	captions := getCaptions(body)
@@ -93,8 +92,7 @@ func getCaptions(body []byte) []CaptionTrack {
 
 func buildURL(videoID string) string {
 	if videoID == "" {
-		fmt.Println("Video ID is required")
-		os.Exit(1)
+		log.Fatal("Video ID is required")
 	}
 	rep := strings.NewReplacer("\\0026", "&", "\\", "")
 	return rep.Replace(fmt.Sprintf("https://www.youtube.com/watch?v=%s", videoID))
