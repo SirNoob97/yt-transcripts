@@ -14,7 +14,7 @@ import (
 // Fetcher ...
 type Fetcher interface {
 	Fetch(videoID, language string) Transcript
-	List(videoID string) ([]string, error)
+	List(videoID string) (map[string]string, error)
 }
 
 // Transcript ...
@@ -30,18 +30,17 @@ func NewTrasncript(client client.Requester) Transcript {
 }
 
 // List ...
-func (t Transcript) List(videoID string) ([]string, error) {
+func (t Transcript) List(videoID string) (map[string]string, error) {
 	body, err := t.client.DoGetRequest(buildURL(videoID))
 	if err != nil {
-		return []string{}, err
+		return map[string]string{}, err
 	}
 
 	captions := getCaptions(body)
-	tracks := make([]string, 0, len(captions))
+	tracks := make(map[string]string, len(captions))
 	if len(captions) > 0 {
-		tracks = append(tracks, fmt.Sprintf("Available Transcripts of %s", videoID))
-		for i, track := range captions {
-			tracks = append(tracks, fmt.Sprintf("Transcript #%d - %s(%s)", i+1, track.Name.SimpleText, track.LanguageCode))
+		for _, track := range captions {
+			tracks[track.Name.SimpleText] = track.LanguageCode
 		}
 	}
 
