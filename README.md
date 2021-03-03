@@ -16,7 +16,7 @@ Options:
 ```
 
 ```
-Usage of: ./yt-transcripts list [OPTIONS]
+Usage of: yt-transcripts list [OPTIONS]
 
 Options:
   -i, --id          Video ID
