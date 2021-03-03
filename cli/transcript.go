@@ -2,6 +2,7 @@ package cli
 
 import (
 	"errors"
+	"fmt"
 	"html"
 	"log"
 	"os"
@@ -42,7 +43,19 @@ func (t FetcherClient) Save(id, language, filename string) error {
 
 // List ...
 func (t FetcherClient) List(id string) ([]string, error) {
-	return t.fetcher.List(id)
+	languages, err := t.fetcher.List(id)
+	if err != nil {
+		return []string{}, err
+	}
+
+	ret := make([]string, 0, len(languages))
+	ret = append(ret, fmt.Sprintf("Available Transcripts of %s", id))
+	i := 1
+	for name, lan := range languages {
+		ret = append(ret, fmt.Sprintf("Transcript #%d %s(%s)", i, name, lan))
+		i++
+	}
+	return ret, nil
 }
 
 // Fetch ...
