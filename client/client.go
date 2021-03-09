@@ -2,7 +2,6 @@ package client
 
 import (
 	"io/ioutil"
-	"log"
 	"net/http"
 	"strings"
 )
@@ -14,7 +13,7 @@ type Requester interface {
 
 // HTTPClient ...
 type HTTPClient struct {
-	client    *http.Client
+	client *http.Client
 }
 
 // NewHTTPClient ...
@@ -26,12 +25,12 @@ func NewHTTPClient() HTTPClient {
 func (c HTTPClient) DoGetRequest(url string) ([]byte, error) {
 	req, err := http.NewRequest("GET", url, strings.NewReader(""))
 	if err != nil {
-		log.Fatal(err)
+		return nil, err
 	}
 
 	res, err := c.client.Do(req)
 	if err != nil {
-		log.Fatal(err)
+		return nil, err
 	}
 	defer res.Body.Close()
 
