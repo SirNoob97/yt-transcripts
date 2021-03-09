@@ -16,20 +16,26 @@ var (
 	Appname string
 )
 
-func main() {
-	v, h := flags()
+var (
+	helpLong     = flag.Bool("help", false, "")
+	helpShort    = flag.Bool("h", false, "")
+	versionLong  = flag.Bool("version", false, "")
+	versionShort = flag.Bool("v", false, "")
+)
 
+func main() {
+	flag.Parse()
 	hc := client.NewHTTPClient()
 	t := transcript.NewTrasncript(hc)
 	c := cli.NewFetcherClient(t)
 	s := cli.NewSwitch(Appname, Version, c)
 
-	if *h || len(os.Args) == 1 {
+	if *helpLong || *helpShort || len(os.Args) == 1 {
 		s.Help()
 		return
 	}
 
-	if *v {
+	if *versionLong || *versionShort {
 		s.Info()
 		return
 	}
@@ -37,17 +43,6 @@ func main() {
 	err := s.Switch()
 	if err != nil {
 		fmt.Printf("cmd switch error %v\n", err)
-		os.Exit(2)
+		os.Exit(1)
 	}
-}
-
-func flags() (*bool, *bool) {
-	versionFlag, helpFlag := false, false
-	flag.BoolVar(&helpFlag, "help", false, "")
-	flag.BoolVar(&helpFlag, "h", false, "")
-	flag.BoolVar(&versionFlag, "version", false, "")
-	flag.BoolVar(&versionFlag, "v", false, "")
-	flag.Parse()
-
-	return &versionFlag, &helpFlag
 }
