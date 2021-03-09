@@ -16,7 +16,7 @@ Options:
 ```
 
 ```
-Usage of: ./yt-transcripts list [OPTIONS]
+Usage of: yt-transcripts list [OPTIONS]
 
 Options:
   -i, --id          Video ID
@@ -32,7 +32,7 @@ Options:
 ```
 
 ```
-Usage of: ./yt-transcripts fetch [OPTIONS]
+Usage of: yt-transcripts fetch [OPTIONS]
 
 Options:
   -i, --id          Video ID
