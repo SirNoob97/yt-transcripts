@@ -49,8 +49,8 @@ func TestSaveFetchFailCase(t *testing.T) {
 }
 
 func TestListFetch(t *testing.T) {
-	const id = "ID"
-	res := []string{id}
+	const id, key, value = "ID", "KEY", "VALUE"
+	res := map[string]string{key:value}
 	f := new(mocks.Fetcher)
 	client := NewFetcherClient(f)
 
@@ -68,7 +68,7 @@ func TestListFetch(t *testing.T) {
 
 func TestListFetchFailCase(t *testing.T) {
 	const id = "ID"
-	var res, errorMsg = []string{}, errors.New("ERROR")
+	var res, errorMsg = map[string]string{}, errors.New("ERROR")
 	f := new(mocks.Fetcher)
 	client := NewFetcherClient(f)
 
