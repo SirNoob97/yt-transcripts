@@ -27,15 +27,15 @@ func (_m *Fetcher) Fetch(videoID string, language string) transcript.Transcript 
 }
 
 // List provides a mock function with given fields: videoID
-func (_m *Fetcher) List(videoID string) ([]string, error) {
+func (_m *Fetcher) List(videoID string) (map[string]string, error) {
 	ret := _m.Called(videoID)
 
-	var r0 []string
-	if rf, ok := ret.Get(0).(func(string) []string); ok {
+	var r0 map[string]string
+	if rf, ok := ret.Get(0).(func(string) map[string]string); ok {
 		r0 = rf(videoID)
 	} else {
 		if ret.Get(0) != nil {
-			r0 = ret.Get(0).([]string)
+			r0 = ret.Get(0).(map[string]string)
 		}
 	}
 
