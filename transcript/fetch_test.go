@@ -98,7 +98,7 @@ func TestFetch(t *testing.T) {
 }
 
 func TestFetchFailCase(t *testing.T) {
-	const videoID, wronglanguage, textURL = "ID", "WRONGLANGUAGE", "BASEURL"
+	const videoID, wronglanguage = "ID", "WRONGLANGUAGE"
 	const videoURL = "https://www.youtube.com/watch?v=ID"
 	hc := new(mocks.Requester)
 	transcript := NewTrasncript(hc)
