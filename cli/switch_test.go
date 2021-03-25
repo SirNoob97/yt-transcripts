@@ -171,7 +171,7 @@ func TestInfo(t *testing.T) {
 }
 
 func TestSaveFlags(t *testing.T) {
-	const command = "COMMAND"
+	const appname, command = "TESTING", "COMMAND"
 	cmd := flag.NewFlagSet(command, flag.ExitOnError)
 	s := Switch{}
 
@@ -189,7 +189,7 @@ func TestSaveFlags(t *testing.T) {
 }
 
 func TestFetchFlags(t *testing.T) {
-	const command = "COMMAND"
+	const appname, command = "TESTING", "COMMAND"
 	cmd := flag.NewFlagSet(command, flag.ExitOnError)
 	s := Switch{}
 
